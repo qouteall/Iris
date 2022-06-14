@@ -25,6 +25,7 @@ import java.util.Optional;
 public class IrisChunkProgramOverrides {
 	private boolean shadersCreated = false;
     private final EnumMap<IrisTerrainPass, GlProgram<IrisChunkShaderInterface>> programs = new EnumMap<>(IrisTerrainPass.class);
+	private int versionCounterForSodiumShaderReload = -1;
 
     private GlShader createVertexShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
         Optional<String> irisVertexShader;
@@ -194,8 +195,6 @@ public class IrisChunkProgramOverrides {
 	}
 
 	public void createShaders(SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
-        Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
-
         if (pipeline != null) {
 			pipeline.patchShaders(vertexType);
             for (IrisTerrainPass pass : IrisTerrainPass.values()) {
@@ -215,8 +214,9 @@ public class IrisChunkProgramOverrides {
 
     @Nullable
     public GlProgram<IrisChunkShaderInterface> getProgramOverride(BlockRenderPass pass, ChunkVertexType vertexType) {
-        if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
-            deleteShaders();
+        if (versionCounterForSodiumShaderReload != Iris.getPipelineManager().getVersionCounterForSodiumShaderReload()) {
+			versionCounterForSodiumShaderReload = Iris.getPipelineManager().getVersionCounterForSodiumShaderReload();
+			deleteShaders();
         }
 
 		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
